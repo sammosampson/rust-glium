@@ -90,6 +90,18 @@ pub fn run() {
                 [0.0, 0.0, 0.0, 0.0]
             ) 
         }
+ 
+        pub fn expand_dimensions(&mut self, increase_in_pixels: i16) {
+            let unsigned_movement_in_pixels = increase_in_pixels.wrapping_abs() as u16;
+            if increase_in_pixels > 0 {
+                self.dimensions[0] = &self.dimensions[0] + unsigned_movement_in_pixels;
+                self.dimensions[1] = &self.dimensions[1] + unsigned_movement_in_pixels;
+            } else {
+                
+                self.dimensions[0] = &self.dimensions[0] - unsigned_movement_in_pixels;
+                self.dimensions[1] = &self.dimensions[1] - unsigned_movement_in_pixels;
+            }
+        }
     }
 
     implement_vertex!(
@@ -106,12 +118,12 @@ pub fn run() {
     let white = [1.0, 1.0, 1.0, 1.0];        
     let black = [0.0, 0.0, 0.0, 1.0];        
     
-    let shape = glium::vertex::VertexBuffer::dynamic(
+    let mut vertices = glium::vertex::VertexBuffer::dynamic(
         &display, 
         &[
             RenderPrimitive::circle([100, 100], 100, white, black, 5.0),
-            RenderPrimitive::rectangle([800, 800], [600, 600], white, black, 20.0, [0.1, 0.3, 0.4, 0.2]),
-            RenderPrimitive::text([800, 200], [600, 600], white, 37),
+            RenderPrimitive::rectangle([400, 400], [300, 300], white, black, 20.0, [0.1, 0.3, 0.4, 0.2]),
+            RenderPrimitive::text([400, 100], [600, 600], black, 37),
         ]).unwrap();
 
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::Points);
@@ -316,6 +328,8 @@ pub fn run() {
     let framebuffer_dimensions = display.get_framebuffer_dimensions();
     let resolution: [f32;2] = [framebuffer_dimensions.0 as f32, framebuffer_dimensions.1 as f32];
     
+    println!("resolution: {:?}", resolution);
+    
     let mut glyphs = vec!();
     let glyph_dimensions = (96, 96);    
     
@@ -341,24 +355,11 @@ pub fn run() {
     let font_buffer = glium::texture::texture2d_array::Texture2dArray::new(&display, glyphs).unwrap();
     
     println!("made raw glyph texture array of count {}", glyph_count);
-    
-    let uniforms = uniform! {
-        uResolution: resolution,
-        font_buffer: font_buffer.sampled().magnify_filter(glium::uniforms::MagnifySamplerFilter::Linear)
-    };
 
-    let params = glium::DrawParameters {
-        blend: glium::Blend::alpha_blending(),
-        .. Default::default()
-    };
-
-    let mut target = display.draw();
-    target.clear_color(0.3, 0.3, 0.5, 1.0);
-    target.draw(&shape, &indices, &program, &uniforms, &params).unwrap();
-    target.finish().unwrap();
+    let mut time: f32 = -0.5;
 
     event_loop.run(move |event, _, control_flow| {
-        let next_frame_time = std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
+        let next_frame_time = std::time::Instant::now() + std::time::Duration::from_nanos(100);
         *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
 
         match event {
@@ -376,5 +377,27 @@ pub fn run() {
             },
             _ => return,
         }
+
+        time += 0.002;
+        if time > 0.5 {
+            time = -0.5;
+        }
+
+        &mut vertices.map()[2].expand_dimensions((time * 10.0) as i16);
+        
+        let uniforms = uniform! {
+            uResolution: resolution,
+            font_buffer: font_buffer.sampled().magnify_filter(glium::uniforms::MagnifySamplerFilter::Linear)
+        };
+    
+        let params = glium::DrawParameters {
+            blend: glium::Blend::alpha_blending(),
+            .. Default::default()
+        };
+
+        let mut target = display.draw();
+        target.clear_color(0.3, 0.3, 0.5, 1.0);
+        target.draw(&vertices, &indices, &program, &uniforms, &params).unwrap();
+        target.finish().unwrap();
     });
 }
