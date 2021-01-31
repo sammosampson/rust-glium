@@ -359,7 +359,7 @@ pub fn run() {
     let mut time: f32 = -0.5;
 
     event_loop.run(move |event, _, control_flow| {
-        let next_frame_time = std::time::Instant::now() + std::time::Duration::from_nanos(100);
+        let next_frame_time = std::time::Instant::now() + std::time::Duration::from_nanos(16_666_667);
         *control_flow = glutin::event_loop::ControlFlow::WaitUntil(next_frame_time);
 
         match event {
@@ -396,8 +396,11 @@ pub fn run() {
         };
 
         let mut target = display.draw();
+        let draw_frame_start = std::time::Instant::now();
         target.clear_color(0.3, 0.3, 0.5, 1.0);
         target.draw(&vertices, &indices, &program, &uniforms, &params).unwrap();
         target.finish().unwrap();
+        let draw_time = std::time::Instant::now() - draw_frame_start;
+        println!("frame draw time: {:?}", draw_time);
     });
 }
