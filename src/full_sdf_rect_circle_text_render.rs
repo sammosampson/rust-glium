@@ -106,7 +106,7 @@ pub fn run() {
     let white = [1.0, 1.0, 1.0, 1.0];        
     let black = [0.0, 0.0, 0.0, 1.0];        
     
-    let shape = glium::vertex::VertexBuffer::new(
+    let shape = glium::vertex::VertexBuffer::dynamic(
         &display, 
         &[
             RenderPrimitive::circle([100, 100], 100, white, black, 5.0),
