@@ -7,7 +7,6 @@ pub fn run() {
     let display = glium::Display::new(wb, cb, &event_loop).unwrap();
 
     event_loop.run(move |ev, _, control_flow| {
-
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 1.0, 1.0);
         target.finish().unwrap();

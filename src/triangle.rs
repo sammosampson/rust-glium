@@ -17,7 +17,13 @@ pub fn run() {
     let vertex1 = Vertex { position: [-0.5, -0.5] };
     let vertex2 = Vertex { position: [ 0.0,  0.5] };
     let vertex3 = Vertex { position: [ 0.5, -0.25] };
-    let shape = vec![vertex1, vertex2, vertex3];
+    let mut shape = vec!();
+
+    for _ in 0..1000 {
+        shape.push(vertex1);
+        shape.push(vertex2);
+        shape.push(vertex3);
+    }
 
     let vertex_buffer = glium::VertexBuffer::new(&display, &shape).unwrap();
     let indices = glium::index::NoIndices(glium::index::PrimitiveType::TrianglesList);
@@ -61,9 +67,18 @@ pub fn run() {
             _ => return,
         }
 
+        let params = glium::DrawParameters {
+            depth: glium::Depth {
+                test: glium::DepthTest::IfLess,
+                write: false,
+                .. Default::default()
+            },
+            .. Default::default()
+        };
+
         let mut target = display.draw();
         target.clear_color(0.0, 0.0, 1.0, 1.0);
-        target.draw(&vertex_buffer, &indices, &program, &glium::uniforms::EmptyUniforms, &Default::default()).unwrap();
+        target.draw(&vertex_buffer, &indices, &program, &glium::uniforms::EmptyUniforms, &params).unwrap();
         target.finish().unwrap();
     });
 }
